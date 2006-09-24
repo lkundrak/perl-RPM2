@@ -1,0 +1,24 @@
+RPM2 version 0.67
+=================
+
+See the documentation in RPM2.pm ("perldoc RPM2.pm") for module usage.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  rpm (generally in the rpm-devel package)
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2006 Chip Turner
+
