@@ -13,6 +13,7 @@ use Test;
 use strict;
 BEGIN { plan tests => 63 };
 use RPM2;
+use POSIX;
 ok(1); # If we made it this far, we're ok.
 
 #########################
@@ -107,17 +108,13 @@ ok(($pkg <=> $pkg2) == 0);
 ok(!($pkg < $pkg2));
 ok(!($pkg > $pkg2));
 
+my $other_rpm_dir = getcwd() . '/rpmdb';
 # another rpm, handily provided by the rpmdb-redhat package
-my $other_rpm_dir = "/usr/lib/rpmdb/i386-redhat-linux/redhat";
-if (-d $other_rpm_dir) {
-  my $db2 = RPM2->open_rpm_db(-path => $other_rpm_dir);
-  ok(defined $db2);
-  $db2 = undef;
-}
-else {
-  print "Install the rpmdb-redhat package to test two simultaneous open databases\n";
-  ok(1);
-}
+# ... is no longer shipped. Create a new one:
+system( "rm -rf rpmdb; mkdir rpmdb; /usr/bin/rpmdb --dbpath $other_rpm_dir --initdb" );
+my $db2 = RPM2->open_rpm_db(-path => $other_rpm_dir);
+ok(defined $db2);
+$db2 = undef;
 
 ok(RPM2->expand_macro("%%foo") eq "%foo");
 RPM2->add_macro("rpm2_test_macro", "testval $$");
