@@ -432,15 +432,51 @@ tag_by_id(h, tag)
 			PUSHs(sv_2mortal(newSVpv((char *)ret, 0)));
 			break;
 		case RPM_CHAR_TYPE:
+			{
+			int i;
+			char *r;
+
+			EXTEND(SP, n);
+			r = (char *)ret;
+
+			for (i = 0; i < n; i++) {
+				PUSHs(sv_2mortal(newSViv(r[i])));
+			}
+			}
+			break;
 		case RPM_INT8_TYPE:
+			{
+			int i;
+			uint8_t *r;
+
+			EXTEND(SP, n);
+			r = (uint8_t *)ret;
+
+			for (i = 0; i < n; i++) {
+				PUSHs(sv_2mortal(newSViv(r[i])));
+			}
+			}
+			break;
 		case RPM_INT16_TYPE:
+			{
+			int i;
+			uint16_t *r;
+
+			EXTEND(SP, n);
+			r = (uint16_t *)ret;
+
+			for (i = 0; i < n; i++) {
+				PUSHs(sv_2mortal(newSViv(r[i])));
+			}
+			}
+			break;
 		case RPM_INT32_TYPE:
 			{
 			int i;
-			int *r;
+			uint32_t *r;
 
 			EXTEND(SP, n);
-			r = (int *)ret;
+			r = (uint32_t *)ret;
 
 			for (i = 0; i < n; i++) {
 				PUSHs(sv_2mortal(newSViv(r[i])));
