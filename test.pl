@@ -152,11 +152,8 @@ ok($t->order());
 my @rpms = $t->elements();
 ok($rpms[0] eq  $pkg->as_nvre());
 ok(scalar(@rpms) == 1);
-# Install package
-ok($t->run());
+skip( ( $< == 0 ) ? undef : ': must be root to create RPM transaction.',  ( $< == 0 ) ? $t->run() : undef );
 $t = undef;
-
-#
 # See if we can find the rpm in the database now...
 $db = RPM2->open_rpm_db();
 ok(defined $db);
@@ -166,7 +163,7 @@ ok($i);
 while (my $pkg = $i->next) {
   push @pkg, $pkg;
 }
-ok(scalar(@pkg) == 1);
+skip( ( $< == 0 ) ? undef : ': package not added as not root.',  ( $< == 0 ) ? scalar(@pkg) == 1 : undef );
 $i  = undef;
 $db = undef;
 
@@ -175,9 +172,9 @@ $db = undef;
 $t = RPM2->create_transaction();
 ok(ref($t) eq 'RPM2::Transaction');
 # We need to find the package we installed, and try to erase it
-ok($t->add_erase($pkg[0]));
+skip( ( $< == 0 ) ? undef : ': package not erased as not root.', ( $< == 0 ) ? $t->add_erase($pkg[0]) : undef );
 # Check element count
-ok($t->element_count() == 1);
+skip( ( $< == 0 ) ? undef : ': no transaction as not root.', ( $< == 0 ) ? ($t->element_count() == 1) : undef );
 # Test depedency checks
 ok($t->check());
 # Order the transaction...see if we get our one transaction.
@@ -186,7 +183,7 @@ ok($t->order());
 ok($rpms[0] eq  $pkg->as_nvre());
 ok(scalar(@rpms) == 1);
 # Install package
-ok($t->run());
+skip( ( $< == 0 ) ? undef : ': cannot run RPM transaction as not root.', ( $< == 0 ) ? $t->run() : undef );
 # Test closing the database
 ok($t->close_db());
 
