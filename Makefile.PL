@@ -25,7 +25,13 @@ if (open FH, "<$filename") {
 
 my @defines;
 # detect which rpm is running.  ugly but necessary... for now.
-if (-e '/usr/include/rpm/rpmts.h') {
+# ^^^ (Poor you, if only you knew I'll make it much worse -- lkundrak)
+if (`pkg-config rpm --modversion` =~ /^(\d+)\.(\d+).*/) {
+  my ($major, $minor) = ($1, $2);
+  ($major, $minor) = (4,6) if $major >= 4 and $minor > 6;
+  push @defines, "-DRPM2_RPM$major$minor";
+}
+elsif (-e '/usr/include/rpm/rpmts.h') {
   push @defines, '-DRPM2_RPM41';
 }
 else {

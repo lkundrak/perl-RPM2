@@ -1,22 +1,28 @@
 #include <stdio.h>
-#include "rpmlib.h"
-#include "rpmcli.h"
+#include <string.h>
+#include <rpmlib.h>
+#include <rpmcli.h>
 
-#ifdef RPM2_RPM41
-#include "rpmts.h"
-#include "rpmte.h"
+#ifndef RPM2_RPM40
+#  include <rpmts.h>
+#  include <rpmte.h>
 #endif
 
-#include "header.h"
-#include "rpmdb.h"
-#include "misc.h"
+#include <header.h>
+#include <rpmdb.h>
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#  include "misc.h"
+#else
+#  define _RPM_4_4_COMPAT
+#  include <rpmlegacy.h>
+#endif
 
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 
-#if !defined(RPM2_RPM41) && !defined(RPM2_RPM40)
-#error Must define one of RPM2_RPM41 or RPM2_RPM40; perhaps Makefile.PL could not guess your RPM API version?
+#if !defined(RPM2_RPM41) && !defined(RPM2_RPM40) && !defined(RPM2_RPM46)
+#error Seems like Makefile.PL could not guess your RPM API version.
 #endif
 
 /* Chip, this is somewhat stripped down from the default callback used by
@@ -29,9 +35,14 @@
 */
 void * _null_callback(
 	const void * arg, 
-	const rpmCallbackType what, 
+	const rpmCallbackType what,
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
 	const unsigned long amount, 
-	const unsigned long total, 
+	const unsigned long total,
+#else 
+	const rpm_loff_t amount,
+	const rpm_loff_t total,
+#endif
 	fnpyKey key, 
 	rpmCallbackData data)
 {
@@ -129,11 +140,24 @@ void * _null_callback(
 void
 _populate_header_tags(HV *href)
 {
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
     int i = 0;
 
     for (i = 0; i < rpmTagTableSize; i++) {
         hv_store(href, rpmTagTable[i].name, strlen(rpmTagTable[i].name), newSViv(rpmTagTable[i].val), 0);
     }
+#else
+    rpmtd names;
+    const char *name;
+
+    names = rpmtdNew();
+    rpmTagGetNames(names, 1);
+    while ((name = rpmtdNextString(names)) != NULL) {
+        const char *sname = name + strlen("RPMTAG_");
+        hv_store(href, name, strlen(name),
+            newSViv(rpmTagGetValue(name + strlen("RPMTAG_"))), 0);
+    }
+#endif
 }
 
 void
@@ -158,7 +182,7 @@ BOOT:
 	constants = perl_get_hv("RPM2::constants", TRUE);
 
 	/* not the 'standard' way of doing perl constants, but a lot easier to maintain */
-#ifdef RPM2_RPM41
+#ifndef RPM2_RPM40
 	REGISTER_CONSTANT(RPMVSF_DEFAULT);
 	REGISTER_CONSTANT(RPMVSF_NOHDRCHK);
 	REGISTER_CONSTANT(RPMVSF_NEEDPAYLOAD);
@@ -183,10 +207,13 @@ double
 rpm_api_version(pkg)
 	char * pkg
     CODE:
-#if defined(RPM2_RPM41) && ! defined(RPM2_RPM40)
+#ifdef RPM2_RPM46
+	RETVAL = (double)4.6;
+#endif
+#ifdef RPM2_RPM41
 	RETVAL = (double)4.1;
 #endif
-#if ! defined(RPM2_RPM41) && defined(RPM2_RPM40)
+#ifdef RPM2_RPM40
 	RETVAL = (double)4.0;
 #endif
     OUTPUT:
@@ -229,7 +256,7 @@ _read_package_info(fp, vsflags)
 	FILE *fp
 	int vsflags
     PREINIT:
-#ifdef RPM2_RPM41
+#ifndef RPM2_RPM40
 	rpmts ts;
 #endif
 	Header ret;
@@ -237,7 +264,7 @@ _read_package_info(fp, vsflags)
 	rpmRC rc;
 	FD_t fd;
     PPCODE:
-#ifdef RPM2_RPM41
+#ifndef RPM2_RPM40
 	ts = rpmtsCreate();
 #endif
 
@@ -249,7 +276,7 @@ _read_package_info(fp, vsflags)
         */ 
 
 	fd = fdDup(fileno(fp));
-#ifdef RPM2_RPM41
+#ifndef RPM2_RPM40
 	rpmtsSetVSFlags(ts, vsflags);
 	rc = rpmReadPackageFile(ts, fd, "filename or other identifier", &ret);
 #else
@@ -271,7 +298,7 @@ _read_package_info(fp, vsflags)
 	else {
 	    croak("error reading package");
 	}
-#ifdef RPM2_RPM41
+#ifndef RPM2_RPM40
 	ts = rpmtsFree(ts);
 #endif
 
@@ -355,6 +382,11 @@ _init_iterator(db, rpmtag, key, len)
 	char *key
 	size_t len
     CODE:
+    /* See rpmdbInitIterator() code for explanation of this */
+	if (rpmtag == RPMDBI_PACKAGES) {
+		len = sizeof (key);
+	}
+        
 	RETVAL = rpmdbInitIterator(db, rpmtag, key && *key ? key : NULL, len);
     OUTPUT:
 	RETVAL
@@ -403,7 +435,11 @@ tag_by_id(h, tag)
 	int tag
     PREINIT:
 	void *ret = NULL;
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
 	int type;
+#else
+	rpmTagType type;
+#endif
 	int n;
 	int ok;
     PPCODE:
@@ -513,9 +549,18 @@ _header_sprintf(h, format)
     PREINIT:
 	char * s;
     PPCODE:
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
 	s =  headerSprintf(h, format, rpmTagTable, rpmHeaderFormats, NULL);
+#else
+	s =  headerFormat(h, format, NULL);
+#endif
 	PUSHs(sv_2mortal(newSVpv((char *)s, 0)));
+/* By the way, the #if below is completely useless, free() would work for both */
+#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
 	s = _free(s);
+#else
+	free(s);
+#endif
 
 
 MODULE = RPM2		PACKAGE = RPM2::C::Transaction
