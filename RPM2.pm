@@ -8,7 +8,7 @@ use File::Basename qw/basename dirname/;
 use File::Spec ();
 
 use vars qw/$VERSION/;
-$VERSION = '0.67';
+$VERSION = '0.68';
 use vars qw/@ISA/;
 @ISA = qw/DynaLoader/;
 
@@ -555,7 +555,7 @@ before running the transaction:
 That is to explicitly cause the RPM2::DB and RPM2::PackageIterator objects to
 go out of scope.
 
-=over 4
+=over
 
 =item open_rpm_db(-path => "/path/to/db")
 
@@ -608,7 +608,7 @@ Require that a files payload be part of the RPM (Chip is this right?).
 
 =head1 RPM DB object methods
 
-=over 4
+=over
 
 =item find_all_iter()
 
@@ -658,7 +658,7 @@ Once you have a a database iterator, then you simply need to step
 through all the different package headers in the result set via the
 iterator.
 
-=over 4
+=over
 
 =item next()
 
@@ -677,7 +677,7 @@ $hdr->epoch() is equivalent to $hdr->tag('epoch').
 
 The <=> and cmp operators can be used to compare versions of two packages.
 
-=over 4
+=over
 
 =item $hdr->tag($tagname)
 
@@ -730,7 +730,7 @@ treated as on "transaction" which is assigned a transaction id.  This can
 be queried in install packages as the INSTALLTID, and for repackaged packages
 they have the REMOVETID set.
 
-=over 4
+=over
 
 =item add_install($pkg, $upgrade)
 
@@ -784,21 +784,37 @@ Signature validation.
 
 =head1 HISTORY
 
-=over 8
+=over
 
 =item 0.01
-Initial release
+Initial release.
+
+=item 0.68
+RPM 4.6 Support.
 
 =back
 
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Chip Turner E<lt>cturner@pattern.net<gt>
+L<RPM2> was originally written by Chip Turner E<lt>cturner@pattern.netE<gt>
+and contributions were made by numerous authors. It is currently maintained
+by Lubomir Rintel E<lt>lkundrak@v3.skE<gt>.
+
+The source code is kept in a L<Git> repository at
+L<git://git.fedorahosted.org/perl-RPM2.git>.
+
+=head1 BUGS
+
+Report the bugs (and feature requests) at
+L<http://rt.cpan.org/Public/Bug/Report.html?Queue=RPM2>.
+Alternatively, you can report a bug by sending mail to
+E<lt>bug-RPM2@rt.cpan.orgE<gt>.
 
 =head1 LICENSE
 
-This module is licensed under the same terms as Perl itself.
+This module is free software and is licensed under the same terms as
+Perl itself.
 
 =head1 SEE ALSO
 

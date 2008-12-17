@@ -1,4 +1,4 @@
-RPM2 version 0.67
+RPM2 version 0.68
 =================
 
 See the documentation in RPM2.pm ("perldoc RPM2.pm") for module usage.
@@ -21,4 +21,6 @@ This module requires these other modules and libraries:
 COPYRIGHT AND LICENCE
 
 Copyright (C) 2006 Chip Turner
+Copyright (C) 2007, 2008 Lubomir Rintel <lkundrak@v3.sk>
 
+This module is licensed under the same terms as Perl itself.
