@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include <string.h>
-#include <rpmlib.h>
-#include <rpmcli.h>
+#include <rpm/rpmlib.h>
+#include <rpm/rpmcli.h>
 
 #ifndef RPM2_RPM40
-#  include <rpmts.h>
-#  include <rpmte.h>
+#  include <rpm/rpmts.h>
+#  include <rpm/rpmte.h>
 #endif
 
-#include <header.h>
-#include <rpmdb.h>
+#include <rpm/header.h>
+#include <rpm/rpmdb.h>
 #if defined(RPM2_RPM40) || defined(RPM2_RPM41)
-#  include "misc.h"
+#  include <rpm/misc.h>
 #else
 #  define _RPM_4_4_COMPAT
-#  include <rpmlegacy.h>
+#  include <rpm/rpmlegacy.h>
 #endif
 
 #include "EXTERN.h"

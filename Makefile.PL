@@ -4,6 +4,7 @@ use ExtUtils::MakeMaker;
 
 my $extra_libs = $ENV{EXTRALIBS};
 my $libs = "$extra_libs -lrpm -lrpmdb -lrpmio -lpopt";
+my $include = "-I/usr/include";
 
 # try to be smart about which shared libs we should load.
 # use the .la file.  probably linux only.
@@ -38,13 +39,16 @@ else {
   push @defines, '-DRPM2_RPM40';
 }
 
+`pkg-config rpm --libs` =~ /(.+)/ and $libs = $1;
+`pkg-config rpm --cflags-only-I` =~ /(.+)/ and $include = $1;
+
 WriteMakefile(
     'NAME'		=> 'RPM2',
     'VERSION_FROM'	=> 'RPM2.pm', # finds $VERSION
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
     'LIBS'		=> [ $libs ], # e.g., '-lm'
     'DEFINE'		=> join(" ", @defines), # e.g., '-DHAVE_SOMETHING'
-    'INC'		=> '-I/usr/include/rpm', # e.g., '-I/usr/include/other'
+    'INC'		=> $include, # e.g., '-I/usr/include/other'
     'TYPEMAPS'          => [ 'typemap' ],
     'OPTIMIZE'          => '-g'
 );
