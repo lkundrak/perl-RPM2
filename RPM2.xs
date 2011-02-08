@@ -3,14 +3,16 @@
 #include <rpm/rpmlib.h>
 #include <rpm/rpmcli.h>
 
-#ifndef RPM2_RPM40
+#define RPM_VERSION(major,minor) (major*1000+minor)
+
+#if RPM2_API > RPM_VERSION(4,0)
 #  include <rpm/rpmts.h>
 #  include <rpm/rpmte.h>
 #endif
 
 #include <rpm/header.h>
 #include <rpm/rpmdb.h>
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
 #  include <rpm/misc.h>
 #else
 #  define _RPM_4_4_COMPAT
@@ -21,8 +23,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#if !defined(RPM2_RPM41) && !defined(RPM2_RPM40) && !defined(RPM2_RPM46)
-#error Seems like Makefile.PL could not guess your RPM API version.
+#ifndef RPM2_API
+#  error Seems like Makefile.PL could not guess your RPM API version.
 #endif
 
 /* Chip, this is somewhat stripped down from the default callback used by
@@ -36,7 +38,7 @@
 void * _null_callback(
 	const void * arg, 
 	const rpmCallbackType what,
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
 	const unsigned long amount, 
 	const unsigned long total,
 #else 
@@ -140,7 +142,7 @@ void * _null_callback(
 void
 _populate_header_tags(HV *href)
 {
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
     int i = 0;
 
     for (i = 0; i < rpmTagTableSize; i++) {
@@ -207,15 +209,10 @@ double
 rpm_api_version(pkg)
 	char * pkg
     CODE:
-#ifdef RPM2_RPM46
-	RETVAL = (double)4.6;
-#endif
-#ifdef RPM2_RPM41
-	RETVAL = (double)4.1;
-#endif
-#ifdef RPM2_RPM40
-	RETVAL = (double)4.0;
-#endif
+	int major = RPM2_API / 1000;
+	double minor = (int)RPM2_API % 1000;
+	while (minor >= 1) { minor /= 10; }
+	RETVAL = major + minor;
     OUTPUT:
 	RETVAL
 
@@ -435,7 +432,7 @@ tag_by_id(h, tag)
 	int tag
     PREINIT:
 	void *ret = NULL;
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
 	int type;
 #else
 	rpmTagType type;
@@ -549,14 +546,14 @@ _header_sprintf(h, format)
     PREINIT:
 	char * s;
     PPCODE:
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
 	s =  headerSprintf(h, format, rpmTagTable, rpmHeaderFormats, NULL);
 #else
 	s =  headerFormat(h, format, NULL);
 #endif
 	PUSHs(sv_2mortal(newSVpv((char *)s, 0)));
 /* By the way, the #if below is completely useless, free() would work for both */
-#if defined(RPM2_RPM40) || defined(RPM2_RPM41)
+#if RPM2_API < RPM_VERSION(4,6)
 	s = _free(s);
 #else
 	free(s);

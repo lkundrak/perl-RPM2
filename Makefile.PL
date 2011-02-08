@@ -25,22 +25,27 @@ if (open FH, "<$filename") {
 }
 
 my @defines;
+
 # detect which rpm is running.  ugly but necessary... for now.
 # ^^^ (Poor you, if only you knew I'll make it much worse -- lkundrak)
+my ($major, $minor) = (4,0);
 if (`pkg-config rpm --modversion` =~ /^(\d+)\.(\d+).*/) {
-  my ($major, $minor) = ($1, $2);
-  ($major, $minor) = (4,6) if $major >= 4 and $minor > 6;
-  push @defines, "-DRPM2_RPM$major$minor";
+  ($major, $minor) = ($1, $2);
+  if ($major >= 4 and $minor => 9) {
+    ($major, $minor) = (4,9)
+  } elsif ($major >= 4 and $minor => 6) {
+    ($major, $minor) = (4,6)
+  }
 }
 elsif (-e '/usr/include/rpm/rpmts.h') {
-  push @defines, '-DRPM2_RPM41';
-}
-else {
-  push @defines, '-DRPM2_RPM40';
+  ($major, $minor) = (4,1)
 }
 
 `pkg-config rpm --libs` =~ /(.+)/ and $libs = $1;
 `pkg-config rpm --cflags-only-I` =~ /(.+)/ and $include = $1;
+
+push @defines, "-DRPM2_RPM$major$minor";
+push @defines, sprintf "-DRPM2_API=%i%03i", $major, $minor;
 
 WriteMakefile(
     'NAME'		=> 'RPM2',
