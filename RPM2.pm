@@ -8,7 +8,7 @@ use File::Basename qw/basename dirname/;
 use File::Spec ();
 
 use vars qw/$VERSION/;
-$VERSION = '0.68';
+$VERSION = '0.69';
 use vars qw/@ISA/;
 @ISA = qw/DynaLoader/;
 
@@ -791,6 +791,9 @@ Initial release.
 
 =item 0.68
 RPM 4.6 Support.
+
+=item 0.69
+RPM 4.9 Support.
 
 =back
 
