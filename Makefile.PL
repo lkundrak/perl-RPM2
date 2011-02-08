@@ -29,7 +29,7 @@ my @defines;
 # detect which rpm is running.  ugly but necessary... for now.
 # ^^^ (Poor you, if only you knew I'll make it much worse -- lkundrak)
 my ($major, $minor) = (4,0);
-if (`pkg-config rpm --modversion` =~ /^(\d+)\.(\d+).*/) {
+if (`pkg-config rpm --modversion 2>/dev/null` =~ /^(\d+)\.(\d+).*/) {
   ($major, $minor) = ($1, $2);
   if ($major >= 4 and $minor => 9) {
     ($major, $minor) = (4,9)
@@ -41,8 +41,8 @@ elsif (-e '/usr/include/rpm/rpmts.h') {
   ($major, $minor) = (4,1)
 }
 
-`pkg-config rpm --libs` =~ /(.+)/ and $libs = $1;
-`pkg-config rpm --cflags-only-I` =~ /(.+)/ and $include = $1;
+`pkg-config rpm --libs 2>/dev/null` =~ /(.+)/ and $libs = $1;
+`pkg-config rpm --cflags-only-I 2>/dev/null` =~ /(.+)/ and $include = $1;
 
 push @defines, "-DRPM2_RPM$major$minor";
 push @defines, sprintf "-DRPM2_API=%i%03i", $major, $minor;
