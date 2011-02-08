@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <rpm/rpmlib.h>
 #include <rpm/rpmcli.h>
 
 #define RPM_VERSION(major,minor) (major*1000+minor)
@@ -10,8 +9,11 @@
 #  include <rpm/rpmte.h>
 #endif
 
-#include <rpm/header.h>
-#include <rpm/rpmdb.h>
+#if RPM2_API < RPM_VERSION(4,9)
+#  include <rpm/rpmlib.h>
+#  include <rpm/header.h>
+#  include <rpm/rpmdb.h>
+#endif
 #if RPM2_API < RPM_VERSION(4,6)
 #  include <rpm/misc.h>
 #else
@@ -70,13 +72,21 @@ void * _null_callback(
 					fd = NULL;
 				}
 			} else
+#if RPM2_API < RPM_VERSION(4,9)
 				fd = fdLink(fd, "persist (showProgress)");
+#else
+				fd = fdLink(fd);
+#endif
 			return (void *)fd;
 	 		break;
 
 	case RPMCALLBACK_INST_CLOSE_FILE:
 		/* FIX: still necessary? */
+#if RPM2_API < RPM_VERSION(4,9)
 		fd = fdFree(fd, "persist (showProgress)");
+#else
+		fd = fdFree(fd);
+#endif
 		if (fd != NULL) {
 			xx = Fclose(fd);
 			fd = NULL;
@@ -343,6 +353,7 @@ PPCODE:
 	}
 	Fclose(fd);
 
+#if RPM2_API < RPM_VERSION(4,9)
 
 rpmdb
 _open_rpm_db(for_write)
@@ -355,10 +366,32 @@ _open_rpm_db(for_write)
 		RETVAL = NULL;
 	}
 	RETVAL = db;		
+     OUTPUT:
+	RETVAL
+
+#else
+
+rpmts
+_open_rpm_db(for_write)
+	int   for_write
+    PREINIT:
+	 rpmts ts;
+    CODE:
+	ts = rpmtsCreate();
+	if (rpmtsOpenDB(ts, for_write ? O_RDWR : O_RDONLY)) {
+		croak("rpmtsOpenDB failed");
+		RETVAL = NULL;
+	}
+	RETVAL = ts;
     OUTPUT:
 	RETVAL
 
+#endif
+
+
 MODULE = RPM2		PACKAGE = RPM2::C::DB
+
+#if RPM2_API < RPM_VERSION(4,9)
 
 void
 DESTROY(db)
@@ -387,6 +420,40 @@ _init_iterator(db, rpmtag, key, len)
 	RETVAL = rpmdbInitIterator(db, rpmtag, key && *key ? key : NULL, len);
     OUTPUT:
 	RETVAL
+
+#else
+
+void
+DESTROY(ts)
+	rpmts ts
+    CODE:
+	rpmtsCloseDB(ts);
+	rpmtsFree(ts);
+
+void
+_close_rpm_db(self)
+	rpmts self
+    CODE:
+	rpmtsCloseDB(self);
+	rpmtsFree(self);
+
+rpmdbMatchIterator
+_init_iterator(ts, rpmtag, key, len)
+	rpmts ts
+	int rpmtag
+	char *key
+	size_t len
+    CODE:
+    /* See rpmtsInitIterator() code for explanation of this */
+	if (rpmtag == RPMDBI_PACKAGES) {
+		len = strlen (key);
+	}
+
+	RETVAL = rpmtsInitIterator(ts, rpmtag, len ? key : NULL, len);
+    OUTPUT:
+	RETVAL
+
+#endif
 
 MODULE = RPM2		PACKAGE = RPM2::C::PackageIterator
 Header
