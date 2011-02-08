@@ -194,7 +194,7 @@ BOOT:
 	constants = perl_get_hv("RPM2::constants", TRUE);
 
 	/* not the 'standard' way of doing perl constants, but a lot easier to maintain */
-#ifndef RPM2_RPM40
+#if RPM2_API > RPM_VERSION(4,0)
 	REGISTER_CONSTANT(RPMVSF_DEFAULT);
 	REGISTER_CONSTANT(RPMVSF_NOHDRCHK);
 	REGISTER_CONSTANT(RPMVSF_NEEDPAYLOAD);
@@ -263,7 +263,7 @@ _read_package_info(fp, vsflags)
 	FILE *fp
 	int vsflags
     PREINIT:
-#ifndef RPM2_RPM40
+#if RPM2_API > RPM_VERSION(4,0)
 	rpmts ts;
 #endif
 	Header ret;
@@ -271,7 +271,7 @@ _read_package_info(fp, vsflags)
 	rpmRC rc;
 	FD_t fd;
     PPCODE:
-#ifndef RPM2_RPM40
+#if RPM2_API > RPM_VERSION(4,0)
 	ts = rpmtsCreate();
 #endif
 
@@ -283,7 +283,7 @@ _read_package_info(fp, vsflags)
         */ 
 
 	fd = fdDup(fileno(fp));
-#ifndef RPM2_RPM40
+#if RPM2_API > RPM_VERSION(4,0)
 	rpmtsSetVSFlags(ts, vsflags);
 	rc = rpmReadPackageFile(ts, fd, "filename or other identifier", &ret);
 #else
@@ -305,7 +305,7 @@ _read_package_info(fp, vsflags)
 	else {
 	    croak("error reading package");
 	}
-#ifndef RPM2_RPM40
+#if RPM2_API > RPM_VERSION(4,0)
 	ts = rpmtsFree(ts);
 #endif
 
