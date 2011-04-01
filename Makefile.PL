@@ -31,9 +31,9 @@ my @defines;
 my ($major, $minor) = (4,0);
 if (`pkg-config rpm --modversion 2>/dev/null` =~ /^(\d+)\.(\d+).*/) {
   ($major, $minor) = ($1, $2);
-  if ($major >= 4 and $minor => 9) {
+  if ($major >= 4 and $minor >= 9) {
     ($major, $minor) = (4,9)
-  } elsif ($major >= 4 and $minor => 6) {
+  } elsif ($major >= 4 and $minor >= 6) {
     ($major, $minor) = (4,6)
   }
 }
