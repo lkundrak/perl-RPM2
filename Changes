@@ -1,3 +1,12 @@
+0.70  2011-04-01 lkundrak@v3.sk
+        * Compaibility fixes for older RPMs
+
+0.69  2011-02-08 lkundrak@v3.sk
+	* Port to RPM 4.9
+
+0.68  2008-12-17 lkundrak@v3.sk
+	* Port of RPM2 perl module to RPM 4.6
+
 0.67  2006-09-24 cturner@pattern.net
 	* no code changes, just license clarification
 
