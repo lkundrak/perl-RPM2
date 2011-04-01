@@ -8,7 +8,7 @@ use File::Basename qw/basename dirname/;
 use File::Spec ();
 
 use vars qw/$VERSION/;
-$VERSION = '0.70';
+$VERSION = '1.0';
 use vars qw/@ISA/;
 @ISA = qw/DynaLoader/;
 
@@ -74,9 +74,7 @@ sub open_package {
   my $file = shift;
   my $flags = shift;
 
-  if (RPM2->rpm_api_version > 4.0 and not defined $flags) {
-    $flags = RPM2->vsf_default;
-  }
+  $flags = RPM2->vsf_default;
   $flags ||= 0;
 
   open FH, "<$file"
@@ -96,7 +94,6 @@ sub create_transaction
   my $flags = shift;
   my $t;
 
-  return undef if (RPM2->rpm_api_version <= 4.0); 
   if(not defined $flags) {
     $flags = RPM2->vsf_default;
   }

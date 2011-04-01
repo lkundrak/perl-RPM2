@@ -1,3 +1,6 @@
+1.0   2011-04-01 lkundrak@v3.sk
+        * Tidy-ups, drop ancient version compatibility
+
 0.70  2011-04-01 lkundrak@v3.sk
         * Compaibility fixes for older RPMs
 

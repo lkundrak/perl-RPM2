@@ -11,7 +11,7 @@ use strict;
 
 use Test;
 use strict;
-BEGIN { plan tests => 63 };
+BEGIN { plan tests => 62 };
 use RPM2;
 use POSIX;
 ok(1); # If we made it this far, we're ok.
@@ -122,8 +122,7 @@ ok(RPM2->expand_macro("%rpm2_test_macro") eq "testval $$");
 RPM2->delete_macro("rpm2_test_macro");
 ok(RPM2->expand_macro("%rpm2_test_macro") eq "%rpm2_test_macro");
 
-ok(RPM2->rpm_api_version =~ /4.[0169]/);
-ok(RPM2->rpm_api_version == 4.0 or RPM2->vsf_nosha1 == 65536);
+ok(RPM2->rpm_api_version =~ /4.\d+/);
 
 #
 # Clean up before transaction tests (close the database

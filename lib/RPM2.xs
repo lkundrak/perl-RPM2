@@ -4,30 +4,13 @@
 
 #define RPM_VERSION(major,minor) (major*1000+minor)
 
-#if RPM2_API > RPM_VERSION(4,0)
-#  include <rpm/rpmts.h>
-#  include <rpm/rpmte.h>
-#endif
-
-#if RPM2_API < RPM_VERSION(4,9)
-#  include <rpm/rpmlib.h>
-#  include <rpm/header.h>
-#  include <rpm/rpmdb.h>
-#endif
-#if RPM2_API < RPM_VERSION(4,6)
-#  include <rpm/misc.h>
-#else
-#  define _RPM_4_4_COMPAT
-#  include <rpm/rpmlegacy.h>
-#endif
+#include <rpm/rpmts.h>
+#include <rpm/rpmte.h>
+#include <rpm/rpmdb.h>
 
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-
-#ifndef RPM2_API
-#  error Seems like Makefile.PL could not guess your RPM API version.
-#endif
 
 /* Chip, this is somewhat stripped down from the default callback used by
    the rpmcli.  It has to be here to insure that we open the pkg again. 
@@ -40,18 +23,12 @@
 void * _null_callback(
 	const void * arg, 
 	const rpmCallbackType what,
-#if RPM2_API < RPM_VERSION(4,6)
-	const unsigned long amount, 
-	const unsigned long total,
-#else 
 	const rpm_loff_t amount,
 	const rpm_loff_t total,
-#endif
 	fnpyKey key, 
 	rpmCallbackData data)
 {
 	Header h = (Header) arg;
-	char * s;
 	int flags = (int) ((long)data);
 	void * rc = NULL;
 	const char * filename = (const char *)key;
@@ -83,9 +60,9 @@ void * _null_callback(
 	case RPMCALLBACK_INST_CLOSE_FILE:
 		/* FIX: still necessary? */
 #if RPM2_API < RPM_VERSION(4,9)
-		fd = fdFree(fd, "persist (showProgress)");
+				fd = fdFree(fd, "persist (showProgress)");
 #else
-		fd = fdFree(fd);
+				fd = fdFree(fd);
 #endif
 		if (fd != NULL) {
 			xx = Fclose(fd);
@@ -152,30 +129,21 @@ void * _null_callback(
 void
 _populate_header_tags(HV *href)
 {
-#if RPM2_API < RPM_VERSION(4,6)
-    int i = 0;
-
-    for (i = 0; i < rpmTagTableSize; i++) {
-        hv_store(href, rpmTagTable[i].name, strlen(rpmTagTable[i].name), newSViv(rpmTagTable[i].val), 0);
-    }
-#else
     rpmtd names;
     const char *name;
 
     names = rpmtdNew();
     rpmTagGetNames(names, 1);
     while ((name = rpmtdNextString(names)) != NULL) {
-        const char *sname = name + strlen("RPMTAG_");
-        hv_store(href, name, strlen(name),
+        (void)hv_store(href, name, strlen(name),
             newSViv(rpmTagGetValue(name + strlen("RPMTAG_"))), 0);
     }
-#endif
 }
 
 void
 _populate_constant(HV *href, char *name, int val)
 {
-    hv_store(href, name, strlen(name), newSViv(val), 0);
+    (void)hv_store(href, name, strlen(name), newSViv(val), 0);
 }
 
 #define REGISTER_CONSTANT(name) _populate_constant(constants, #name, name)
@@ -194,7 +162,6 @@ BOOT:
 	constants = perl_get_hv("RPM2::constants", TRUE);
 
 	/* not the 'standard' way of doing perl constants, but a lot easier to maintain */
-#if RPM2_API > RPM_VERSION(4,0)
 	REGISTER_CONSTANT(RPMVSF_DEFAULT);
 	REGISTER_CONSTANT(RPMVSF_NOHDRCHK);
 	REGISTER_CONSTANT(RPMVSF_NEEDPAYLOAD);
@@ -212,13 +179,13 @@ BOOT:
 	REGISTER_CONSTANT(_RPMVSF_NOPAYLOAD);
 	REGISTER_CONSTANT(TR_ADDED);
 	REGISTER_CONSTANT(TR_REMOVED);
-#endif
     }
 
 double
 rpm_api_version(pkg)
 	char * pkg
     CODE:
+	(void)pkg; /* Not used */
 	int major = RPM2_API / 1000;
 	double minor = (int)RPM2_API % 1000;
 	while (minor >= 1) { minor /= 10; }
@@ -233,6 +200,7 @@ add_macro(pkg, name, val)
 	char * name
 	char * val
     CODE:
+	(void)pkg; /* Not used */
 	addMacro(NULL, name, NULL, val, RMIL_DEFAULT);
 
 void
@@ -240,6 +208,7 @@ delete_macro(pkg, name)
 	char * pkg
 	char * name
     CODE:
+	(void)pkg; /* Not used */
 	delMacro(NULL, name);
 
 void
@@ -249,6 +218,7 @@ expand_macro(pkg, str)
     PREINIT:
 	char *ret;
     PPCODE:
+	(void)pkg; /* Not used */
 	ret = rpmExpand(str, NULL);
 	PUSHs(sv_2mortal(newSVpv(ret, 0)));
 	free(ret);
@@ -263,17 +233,12 @@ _read_package_info(fp, vsflags)
 	FILE *fp
 	int vsflags
     PREINIT:
-#if RPM2_API > RPM_VERSION(4,0)
 	rpmts ts;
-#endif
 	Header ret;
-	Header sigs;
 	rpmRC rc;
 	FD_t fd;
     PPCODE:
-#if RPM2_API > RPM_VERSION(4,0)
 	ts = rpmtsCreate();
-#endif
 
         /* XXX Determine type of signature verification when reading
 	vsflags |= _RPMTS_VSF_NOLEGACY;
@@ -283,12 +248,8 @@ _read_package_info(fp, vsflags)
         */ 
 
 	fd = fdDup(fileno(fp));
-#if RPM2_API > RPM_VERSION(4,0)
 	rpmtsSetVSFlags(ts, vsflags);
 	rc = rpmReadPackageFile(ts, fd, "filename or other identifier", &ret);
-#else
-	rc = rpmReadPackageInfo(fd, NULL, &ret);
-#endif
 
 	Fclose(fd);
 
@@ -305,9 +266,7 @@ _read_package_info(fp, vsflags)
 	else {
 	    croak("error reading package");
 	}
-#if RPM2_API > RPM_VERSION(4,0)
 	ts = rpmtsFree(ts);
-#endif
 
 void
 _create_transaction(vsflags)
@@ -353,24 +312,6 @@ PPCODE:
 	}
 	Fclose(fd);
 
-#if RPM2_API < RPM_VERSION(4,9)
-
-rpmdb
-_open_rpm_db(for_write)
-	int   for_write
-    PREINIT:
-	 rpmdb db;
-    CODE:
-	if (rpmdbOpen(NULL, &db, for_write ? O_RDWR | O_CREAT : O_RDONLY, 0644)) {
-		croak("rpmdbOpen failed");
-		RETVAL = NULL;
-	}
-	RETVAL = db;		
-     OUTPUT:
-	RETVAL
-
-#else
-
 rpmts
 _open_rpm_db(for_write)
 	int   for_write
@@ -386,42 +327,7 @@ _open_rpm_db(for_write)
     OUTPUT:
 	RETVAL
 
-#endif
-
-
 MODULE = RPM2		PACKAGE = RPM2::C::DB
-
-#if RPM2_API < RPM_VERSION(4,9)
-
-void
-DESTROY(db)
-	rpmdb db
-    CODE:
-	rpmdbClose(db);
-
-void
-_close_rpm_db(self)
-	rpmdb self
-    CODE:
-	rpmdbClose(self);
-
-rpmdbMatchIterator
-_init_iterator(db, rpmtag, key, len)
-	rpmdb db
-	int rpmtag
-	char *key
-	size_t len
-    CODE:
-    /* See rpmdbInitIterator() code for explanation of this */
-	if (rpmtag == RPMDBI_PACKAGES) {
-		len = sizeof (key);
-	}
-        
-	RETVAL = rpmdbInitIterator(db, rpmtag, key && *key ? key : NULL, len);
-    OUTPUT:
-	RETVAL
-
-#else
 
 void
 DESTROY(ts)
@@ -453,8 +359,6 @@ _init_iterator(ts, rpmtag, key, len)
     OUTPUT:
 	RETVAL
 
-#endif
-
 MODULE = RPM2		PACKAGE = RPM2::C::PackageIterator
 Header
 _iterator_next(i)
@@ -477,6 +381,7 @@ _iterator_next(i)
 	sv_setref_pv(h_sv, "RPM2::C::Header", (void *)ret);
 	PUSHs(h_sv);
 	PUSHs(sv_2mortal(newSViv(offset)));
+        RETVAL = ret;
 
 void
 DESTROY(i)
@@ -498,48 +403,46 @@ tag_by_id(h, tag)
 	Header h
 	int tag
     PREINIT:
-	void *ret = NULL;
-#if RPM2_API < RPM_VERSION(4,6)
-	int type;
-#else
-	rpmTagType type;
-#endif
-	int n;
+	rpmtd tagdata;
 	int ok;
     PPCODE:
-	ok = headerGetEntry(h, tag, &type, &ret, &n);
+	tagdata = rpmtdNew();
+	if (tagdata == NULL) {
+		croak("Out of memory");
+	}
+	ok = headerGet(h, tag, tagdata, HEADERGET_DEFAULT);
 
 	if (!ok) {
 		/* nop, empty stack */
 	}
 	else {
-		switch(type)
+		switch(tagdata->type)
 		{
 		case RPM_STRING_ARRAY_TYPE:
 			{
 			int i;
 			char **s;
 
-			EXTEND(SP, n);
-			s = (char **)ret;
+			EXTEND(SP, tagdata->count);
+			s = (char **)tagdata->data;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < tagdata->count; i++) {
 				PUSHs(sv_2mortal(newSVpv(s[i], 0)));
 			}
 			}
 			break;
 		case RPM_STRING_TYPE:
-			PUSHs(sv_2mortal(newSVpv((char *)ret, 0)));
+			PUSHs(sv_2mortal(newSVpv((char *)tagdata->data, 0)));
 			break;
 		case RPM_CHAR_TYPE:
 			{
 			int i;
 			char *r;
 
-			EXTEND(SP, n);
-			r = (char *)ret;
+			EXTEND(SP, tagdata->count);
+			r = (char *)tagdata->data;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < tagdata->count; i++) {
 				PUSHs(sv_2mortal(newSViv(r[i])));
 			}
 			}
@@ -549,10 +452,10 @@ tag_by_id(h, tag)
 			int i;
 			uint8_t *r;
 
-			EXTEND(SP, n);
-			r = (uint8_t *)ret;
+			EXTEND(SP, tagdata->count);
+			r = (uint8_t *)tagdata->data;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < tagdata->count; i++) {
 				PUSHs(sv_2mortal(newSViv(r[i])));
 			}
 			}
@@ -562,10 +465,10 @@ tag_by_id(h, tag)
 			int i;
 			uint16_t *r;
 
-			EXTEND(SP, n);
-			r = (uint16_t *)ret;
+			EXTEND(SP, tagdata->count);
+			r = (uint16_t *)tagdata->data;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < tagdata->count; i++) {
 				PUSHs(sv_2mortal(newSViv(r[i])));
 			}
 			}
@@ -575,19 +478,19 @@ tag_by_id(h, tag)
 			int i;
 			uint32_t *r;
 
-			EXTEND(SP, n);
-			r = (uint32_t *)ret;
+			EXTEND(SP, tagdata->count);
+			r = (uint32_t *)tagdata->data;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < tagdata->count; i++) {
 				PUSHs(sv_2mortal(newSViv(r[i])));
 			}
 			}
 			break;
 		default:
-			croak("unknown rpm tag type %d", type);
+			croak("unknown rpm tag type %d", tagdata->type);
 		}
 	}
-	headerFreeData(ret, type);
+	rpmtdFreeData(tagdata);
 
 int
 _header_compare(h1, h2)
@@ -613,18 +516,10 @@ _header_sprintf(h, format)
     PREINIT:
 	char * s;
     PPCODE:
-#if RPM2_API < RPM_VERSION(4,6)
-	s =  headerSprintf(h, format, rpmTagTable, rpmHeaderFormats, NULL);
-#else
 	s =  headerFormat(h, format, NULL);
-#endif
 	PUSHs(sv_2mortal(newSVpv((char *)s, 0)));
 /* By the way, the #if below is completely useless, free() would work for both */
-#if RPM2_API < RPM_VERSION(4,6)
-	s = _free(s);
-#else
 	free(s);
-#endif
 
 
 MODULE = RPM2		PACKAGE = RPM2::C::Transaction
@@ -737,8 +632,6 @@ _run(t, ok_probs, prob_filter)
 	rpmts t
 	rpmprobFilterFlags prob_filter 
     PREINIT:
-	int i;
-	rpmProblem p;
 	int ret;
     CODE:
 	/* Make sure we could run this transactions */
