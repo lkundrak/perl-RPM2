@@ -71,9 +71,6 @@ void * _null_callback(
 		break;
 
 	case RPMCALLBACK_INST_START:
-		rpmcliHashesCurrent = 0;
-		if (h == NULL || !(flags & INSTALL_LABEL))
-			break;
 		break;
 
 	case RPMCALLBACK_TRANS_PROGRESS:
@@ -81,30 +78,18 @@ void * _null_callback(
 		break;
 
 	case RPMCALLBACK_TRANS_START:
-		rpmcliHashesCurrent = 0;
-		rpmcliProgressTotal = 1;
-		rpmcliProgressCurrent = 0;
 		break;
 
 	case RPMCALLBACK_TRANS_STOP:
-		rpmcliProgressTotal = rpmcliPackagesTotal;
-		rpmcliProgressCurrent = 0;
 		break;
 
 	case RPMCALLBACK_REPACKAGE_START:
-		rpmcliHashesCurrent = 0;
-		rpmcliProgressTotal = total;
-		rpmcliProgressCurrent = 0;
 		break;
 
 	case RPMCALLBACK_REPACKAGE_PROGRESS:
 		break;
 
 	case RPMCALLBACK_REPACKAGE_STOP:
-		rpmcliProgressTotal = total;
-		rpmcliProgressCurrent = total;
-		rpmcliProgressTotal = rpmcliPackagesTotal;
-		rpmcliProgressCurrent = 0;
 		break;
 
 	case RPMCALLBACK_UNINST_PROGRESS:
