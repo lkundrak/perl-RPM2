@@ -72,10 +72,7 @@ sub open_hdlist {
 sub open_package {
   my $class = shift;
   my $file = shift;
-  my $flags = shift;
-
-  $flags = RPM2->vsf_default;
-  $flags ||= 0;
+  my $flags = shift // RPM2->vsf_default // 0;
 
   open FH, "<$file"
     or die "Can't open $file: $!";
@@ -91,12 +88,8 @@ sub open_package {
 sub create_transaction
 {
   my $class = shift;
-  my $flags = shift;
+  my $flags = shift // RPM2->vsf_default // 0;
   my $t;
-
-  if(not defined $flags) {
-    $flags = RPM2->vsf_default;
-  }
 
   $t = RPM2::_create_transaction($flags);
   $t = RPM2::Transaction->_new_raw($t);
