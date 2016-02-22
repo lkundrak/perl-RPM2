@@ -1,5 +1,4 @@
 Build.PL			Build recipe
-META.yml			Module metadata
 Changes				Change log
 lib/RPM2.pm			Perl bindings
 lib/RPM2.xs			Native code
@@ -10,3 +9,5 @@ test.pl				Test suite
 hdlist-test.hdr			Test artifact
 test-rpm-1.0-1.noarch.rpm	Test artifact
 test-rpm-1.0-1.src.rpm		Test artifact
+META.yml			Module metadata
+META.json			Module metadata
