@@ -17,7 +17,7 @@ my $build = new Module::Build (
 	meta_merge => {
 		resources => {
 			bugtracker => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=RPM2',
-			repository => 'git://git.fedorahosted.org/perl-RPM2.git',
+			repository => 'https://github.com/lkundrak/perl-RPM2.git',
 		}
 	},
 	requires => {

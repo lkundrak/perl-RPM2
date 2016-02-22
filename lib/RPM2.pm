@@ -802,7 +802,7 @@ and contributions were made by numerous authors. It is currently maintained
 by Lubomir Rintel E<lt>lkundrak@v3.skE<gt>.
 
 The source code is kept in a L<Git> repository at
-L<git://git.fedorahosted.org/perl-RPM2.git>.
+L<https://github.com/lkundrak/perl-RPM2.git>.
 
 =head1 BUGS
 
