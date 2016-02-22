@@ -1,3 +1,9 @@
+1.1   2016-02-22 lkundrak@v3.sk
+        * Fix build with RPM 4.10
+        * Test fixes
+        * Minor tidy-ups
+        * Fix $flags defaults for open_package [Charlie Brady]
+
 1.0   2011-04-01 lkundrak@v3.sk
         * Tidy-ups, drop ancient version compatibility
 
