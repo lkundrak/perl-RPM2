@@ -7,10 +7,8 @@ use Cwd qw/realpath/;
 use File::Basename qw/basename dirname/;
 use File::Spec ();
 
-use vars qw/$VERSION/;
-$VERSION = '1.1';
-use vars qw/@ISA/;
-@ISA = qw/DynaLoader/;
+our $VERSION = '1.3';
+our @ISA = qw/DynaLoader/;
 
 bootstrap RPM2 $VERSION;
 
@@ -99,6 +97,8 @@ sub create_transaction
 
 package RPM2::DB;
 
+our $VERSION = $RPM2::VERSION;
+
 sub find_all_iter {
   my $self = shift;
 
@@ -166,6 +166,8 @@ sub find_by_file {
 }
 
 package RPM2::Header;
+
+our $VERSION = $RPM2::VERSION;
 
 use overload '<=>'  => \&op_spaceship,
              'cmp'  => \&op_spaceship,
@@ -327,6 +329,8 @@ sub changelog {
 
 package RPM2::PackageIterator;
 
+our $VERSION = $RPM2::VERSION;
+
 sub new_iterator {
   my $class = shift;
   my $db = shift;
@@ -372,6 +376,8 @@ sub DESTROY {
 }
 
 package RPM2::Transaction;
+
+our $VERSION = $RPM2::VERSION;
 
 sub _new_raw {
   my $class         = shift;
