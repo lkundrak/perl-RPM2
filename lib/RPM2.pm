@@ -8,7 +8,7 @@ use File::Basename qw/basename dirname/;
 use File::Spec ();
 
 use vars qw/$VERSION/;
-$VERSION = '1.0';
+$VERSION = '1.1';
 use vars qw/@ISA/;
 @ISA = qw/DynaLoader/;
 
