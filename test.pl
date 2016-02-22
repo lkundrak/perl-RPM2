@@ -44,7 +44,7 @@ ok(@pkg);
 ok($pkg[0]->name);
 
 @pkg = ();
-$i = $db->find_by_name_iter("kernel");
+$i = $db->find_by_name_iter("filesystem");
 ok($i);
 while (my $pkg = $i->next) {
   push @pkg, $pkg;
@@ -52,12 +52,12 @@ while (my $pkg = $i->next) {
 if (@pkg) {
   ok($pkg[0]->name);
 } else {
-  skip('package kernel not installed');
+  skip('package filesystem not installed');
 }
 
 @pkg = ();
 
-$i = $db->find_by_provides_iter("kernel");
+$i = $db->find_by_provides_iter("filesystem");
 ok($i);
 while (my $pkg = $i->next) {
   push @pkg, $pkg;
@@ -65,7 +65,7 @@ while (my $pkg = $i->next) {
 if (@pkg) {
   ok($pkg[0]->name);
 } else {
-  skip('package providing kernel not installed');
+  skip('package providing filesystem not installed');
 }
 
 @pkg = ();
