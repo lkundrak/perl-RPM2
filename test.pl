@@ -51,6 +51,8 @@ while (my $pkg = $i->next) {
 }
 if (@pkg) {
   ok($pkg[0]->name);
+} else {
+  skip('package kernel not installed');
 }
 
 @pkg = ();
@@ -62,6 +64,8 @@ while (my $pkg = $i->next) {
 }
 if (@pkg) {
   ok($pkg[0]->name);
+} else {
+  skip('package providing kernel not installed');
 }
 
 @pkg = ();
@@ -70,6 +74,8 @@ foreach my $pkg ($db->find_by_file("/bin/sh")) {
 }
 if (@pkg) {
   ok($pkg[0]->name);
+} else {
+  skip('package with /bin/sh not installed');
 }
 
 @pkg = ();
@@ -79,6 +85,8 @@ foreach my $pkg ($db->find_by_requires("/bin/bash")) {
 if (@pkg) {
   ok($pkg[0]->name);
   ok(not defined $pkg[0]->filename);
+} else {
+  for (1..2) { skip('no package requiring /bin/bash installed') }
 }
 
 my $pkg = RPM2->open_package("test-rpm-1.0-1.noarch.rpm");
