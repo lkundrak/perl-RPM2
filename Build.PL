@@ -29,6 +29,9 @@ my $build = new Module::Build (
 	build_requires => {
 		'ExtUtils::CBuilder' => 0,
 	},
+	configure_requires => {
+		'Module::Build' => '0.30',
+	},
 );
 
 $build->create_build_script;
